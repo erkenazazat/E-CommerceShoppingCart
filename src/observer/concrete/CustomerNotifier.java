@@ -1,36 +1,17 @@
 package observer.concrete;
 
-import builder.product.Product;
-import observer.observer.InventoryObserver;
+import observer.observer.StockObserver;
 
-import java.util.HashSet;
-import java.util.Set;
+public class CustomerNotifier implements StockObserver {
+    private final String customerName;
 
-public class CustomerNotifier implements InventoryObserver {
-    private final String customer;
-    private final Set<String> wishlist = new HashSet<>();
-
-    public CustomerNotifier(String customer) {
-        this.customer = customer;
-    }
-
-    public void watch(String productId) {
-        wishlist.add(productId);
+    public CustomerNotifier(String customerName) {
+        this.customerName = customerName;
     }
 
     @Override
-    public void onStockChanged(Product product, int oldQty, int newQty) {
-        if (wishlist.contains(product.getId()) && oldQty == 0 && newQty > 0) {
-            System.out.printf("[Notify -> %s] '%s' is back in stock (%d pcs)%n",
-                    customer, product.getName(), newQty);
-        }
-    }
-
-    @Override
-    public void onPriceChanged(Product product, double oldPrice, double newPrice) {
-        if (wishlist.contains(product.getId()) && newPrice < oldPrice) {
-            System.out.printf("[Notify -> %s] Price of '%s' dropped: %.2f -> %.2f%n",
-                    customer, product.getName(), oldPrice, newPrice);
-        }
+    public void update(String productId, int stock, double price) {
+        System.out.println("[Customer " + customerName + "] Product " + productId
+                + " updated: price = " + price + ", in stock = " + stock);
     }
 }

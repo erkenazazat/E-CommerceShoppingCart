@@ -1,64 +1,37 @@
 package facade;
 
 import decorator.component.Purchasable;
-import facade.subsystem.EmailService;
-import facade.subsystem.OrderService;
 import facade.subsystem.PaymentService;
 import observer.subject.Inventory;
 import strategy.context.ShoppingCart;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 public class CheckoutFacade {
     private final Inventory inventory;
-    private final PaymentService payment = new PaymentService();
-    private final OrderService orders = new OrderService();
-    private final EmailService email = new EmailService();
+    private final PaymentService paymentService;
 
-    public CheckoutFacade(Inventory inventory) {
+    public CheckoutFacade(Inventory inventory, PaymentService paymentService) {
         this.inventory = inventory;
+        this.paymentService = paymentService;
     }
 
-    public int checkout(String customer, ShoppingCart cart) {
-        if (cart.getItems().isEmpty()) {
-            System.out.println("[Checkout] Cart is empty");
-            return -1;
-        }
-
-        // 1. count how many pieces of each product are needed (decorated items share the product id)
-        Map<String, Integer> needed = new LinkedHashMap<>();
+    // one simple method hides: stock check, payment, stock update
+    public boolean checkout(ShoppingCart cart) {
         for (Purchasable item : cart.getItems()) {
-            needed.merge(item.getId(), 1, Integer::sum);
-        }
-
-        // 2. check stock
-        for (Map.Entry<String, Integer> e : needed.entrySet()) {
-            if (inventory.getStock(e.getKey()) < e.getValue()) {
-                System.out.println("[Checkout] Not enough stock for: "
-                        + inventory.getProduct(e.getKey()).getName());
-                return -1;
+            if (inventory.getStock(item.getId()) < 1) {
+                System.out.println("Out of stock: " + item.getId());
+                return false;
             }
         }
 
-        // 3. total with discount (Strategy inside the cart)
-        double total = cart.getTotal();
-        System.out.printf("[Checkout] Subtotal %.2f, discount: %s, to pay: %.2f%n",
-                cart.getSubtotal(), cart.getDiscountName(), total);
-
-        // 4. payment
-        if (!payment.charge(customer, total)) {
-            return -1;
+        if (!paymentService.pay(cart.getTotal())) {
+            System.out.println("Payment failed");
+            return false;
         }
 
-        // 5. reduce stock -> this triggers the Observers
-        for (Map.Entry<String, Integer> e : needed.entrySet()) {
-            inventory.updateStock(e.getKey(), inventory.getStock(e.getKey()) - e.getValue());
+        for (Purchasable item : cart.getItems()) {
+            inventory.reduceStock(item.getId(), 1);
         }
-
-        // 6. order and confirmation email
-        int orderId = orders.createOrder(customer, total);
-        email.sendConfirmation(customer, orderId);
-        return orderId;
+        System.out.println("Order completed. Total: " + cart.getTotal());
+        return true;
     }
 }
