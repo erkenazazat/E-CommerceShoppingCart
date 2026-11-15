@@ -10,6 +10,11 @@ import factory.creator.ProductFactory;
 import strategy.concrete.BulkDiscount;
 import strategy.concrete.PercentageDiscount;
 import strategy.context.ShoppingCart;
+import facade.CheckoutFacade;
+import facade.subsystem.PaymentService;
+import observer.concrete.AdminDashboard;
+import observer.concrete.CustomerNotifier;
+import observer.subject.Inventory;
 
 public class Main {
     public static void main(String[] args) {
