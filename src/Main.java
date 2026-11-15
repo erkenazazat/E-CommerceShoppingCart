@@ -48,5 +48,19 @@ public class Main {
 
         cart.setDiscountStrategy(new BulkDiscount());
         System.out.println(cart.getDiscountName() + " -> " + cart.getTotal());
+
+        System.out.println("\n5.OBSERVER");
+        Inventory inventory = new Inventory();
+        inventory.subscribe(new CustomerNotifier("Alice"));
+        inventory.subscribe(new AdminDashboard());
+        inventory.addProduct(phone, 5);
+        inventory.addProduct(laptop, 2);
+        inventory.addProduct(shirt, 10);
+        System.out.println("Changing price of P1 to 750...");
+        inventory.changePrice("P1", 750);
+
+        System.out.println("\n6.FACADE");
+        CheckoutFacade checkout = new CheckoutFacade(inventory, new PaymentService());
+        checkout.checkout(cart);
     }
 }
