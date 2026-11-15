@@ -1,9 +1,15 @@
 import builder.builder.ProductBuilder;
 import builder.director.ProductDirector;
 import builder.product.Product;
+import decorator.component.Purchasable;
+import decorator.concrete.ExtendedWarranty;
+import decorator.concrete.GiftWrap;
 import factory.concrete.ClothingFactory;
 import factory.concrete.ElectronicsFactory;
 import factory.creator.ProductFactory;
+import strategy.concrete.BulkDiscount;
+import strategy.concrete.PercentageDiscount;
+import strategy.context.ShoppingCart;
 
 public class Main {
     public static void main(String[] args) {
@@ -24,5 +30,23 @@ public class Main {
         ProductFactory clothingFactory=new ClothingFactory();
         Product laptop=electronicsFactory.order("L1", "Laptop", 1200);
         Product shirt=clothingFactory.order("S1", "T-Shirt", 25);
+
+        System.out.println("\n3.DECORATOR");
+        Purchasable specialPhone = new ExtendedWarranty(new GiftWrap(phone));
+        System.out.println(specialPhone.getDescription());
+        System.out.println("Price with extras: " + specialPhone.getPrice());
+
+        System.out.println("\n4.STRATEGY");
+        ShoppingCart cart = new ShoppingCart();
+        cart.addItem(specialPhone);
+        cart.addItem(laptop);
+        cart.addItem(shirt);
+        System.out.println("Subtotal: " + cart.getSubtotal());
+
+        cart.setDiscountStrategy(new PercentageDiscount(20));
+        System.out.println(cart.getDiscountName() + " -> " + cart.getTotal());
+
+        cart.setDiscountStrategy(new BulkDiscount());
+        System.out.println(cart.getDiscountName() + " -> " + cart.getTotal());
     }
 }
